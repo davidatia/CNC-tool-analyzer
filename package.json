@@ -1,0 +1,10 @@
+{
+  "name": "cnc-tool-analyzer",
+  "version": "1.0.0",
+  "description": "CNC Tool Analyzer - ניתוח שרטוטים הנדסיים",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "author": "David Atia"
+}

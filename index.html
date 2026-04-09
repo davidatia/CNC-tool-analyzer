@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CNC Tool Analyzer</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --bg2: #1a1d27;
+    --bg3: #222536;
+    --border: #2e3248;
+    --accent: #4f7ef8;
+    --accent2: #7c5cfc;
+    --text: #e8eaf6;
+    --text2: #8b90b8;
+    --text3: #555a7e;
+    --green: #34d399;
+    --amber: #fbbf24;
+    --red: #f87171;
+    --purple: #a78bfa;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    direction: rtl;
+  }
+
+  /* HEADER */
+  header {
+    border-bottom: 1px solid var(--border);
+    background: var(--bg2);
+    padding: 2rem 1.5rem;
+  }
+  .header-inner {
+    max-width: 960px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    border-right: 1px solid var(--border);
+    border-left: 1px solid var(--border);
+    padding: 1.5rem;
+    border-radius: var(--radius);
+  }
+  .logo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .logo-icon {
+    width: 48px; height: 48px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+    margin-bottom: 2px;
+  }
+  .logo-text { font-size: 20px; font-weight: 600; letter-spacing: -0.3px; }
+  .logo-sub { font-size: 13px; color: var(--text2); margin-top: 2px; }
+  .header-badge {
+    font-size: 11px;
+    padding: 4px 10px;
+    background: rgba(79,126,248,0.12);
+    border: 1px solid rgba(79,126,248,0.3);
+    border-radius: 999px;
+    color: var(--accent);
+  }
+
+  /* MAIN */
+  main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem;
+  }
+
+  /* UPLOAD SECTION */
+  .upload-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+  @media (max-width: 640px) {
+    .upload-section { grid-template-columns: 1fr; }
+  }
+
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+  }
+
+  .card-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 10px;
+  }
+
+  /* DROP ZONE */
+  .drop-zone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-sm);
+    padding: 2rem 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+    min-height: 140px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .drop-zone:hover, .drop-zone.drag-over {
+    border-color: var(--accent);
+    background: rgba(79,126,248,0.05);
+  }
+  .drop-zone input[type=file] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+  }
+  .drop-icon { font-size: 28px; }
+  .drop-main { font-size: 14px; font-weight: 500; color: var(--text); }
+  .drop-sub { font-size: 12px; color: var(--text2); }
+  .drop-preview {
+    width: 100%; height: 120px;
+    object-fit: contain;
+    border-radius: 6px;
+    display: none;
+  }
+  .drop-filename {
+    font-size: 12px; color: var(--green); display: none;
+  }
+
+  /* MATERIAL INPUT */
+  .material-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .field-group { display: flex; flex-direction: column; gap: 6px; }
+  .field-group label { font-size: 13px; color: var(--text2); }
+  .field-group input, .field-group select, .field-group textarea {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-size: 14px;
+    padding: 9px 12px;
+    width: 100%;
+    outline: none;
+    font-family: inherit;
+    direction: rtl;
+    transition: border-color 0.2s;
+  }
+  .field-group input:focus, .field-group select:focus {
+    border-color: var(--accent);
+  }
+  .field-group select option { background: var(--bg2); }
+  .field-group textarea { resize: vertical; min-height: 70px; font-size: 13px; }
+
+  /* ANALYZE BUTTON */
+  .btn-analyze {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    border-radius: var(--radius-sm);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+    letter-spacing: 0.02em;
+    margin-top: 0.5rem;
+  }
+  .btn-analyze:hover { opacity: 0.9; }
+  .btn-analyze:active { transform: scale(0.98); }
+  .btn-analyze:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* LOADING */
+  .loading {
+    display: none;
+    text-align: center;
+    padding: 3rem;
+  }
+  .spinner {
+    width: 44px; height: 44px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 1rem;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-size: 14px; color: var(--text2); }
+  .loading-steps { margin-top: 1.5rem; display: flex; flex-direction: column; gap: 8px; }
+  .step {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 13px; color: var(--text3);
+    transition: color 0.3s;
+  }
+  .step.active { color: var(--text); }
+  .step.done { color: var(--green); }
+  .step-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--text3); flex-shrink: 0;
+    transition: background 0.3s;
+  }
+  .step.active .step-dot { background: var(--accent); }
+  .step.done .step-dot { background: var(--green); }
+
+  /* RESULTS */
+  #results { display: none; }
+  .results-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 1.25rem; flex-wrap: wrap; gap: 10px;
+  }
+  .results-title { font-size: 20px; font-weight: 600; }
+  .results-meta { font-size: 13px; color: var(--text2); }
+
+  /* STATS ROW */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 1.5rem;
+  }
+  @media (max-width: 600px) {
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+  }
+  .stat-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+  }
+  .stat-label { font-size: 11px; color: var(--text2); margin-bottom: 4px; }
+  .stat-value { font-size: 22px; font-weight: 700; color: var(--text); }
+
+  /* GEOMETRY TAGS */
+  .geom-tags {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    margin-bottom: 1.5rem;
+  }
+  .geom-tag {
+    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text2);
+  }
+
+  /* TOOL TABLE */
+  .table-wrap {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    background: var(--bg3);
+    padding: 10px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text2);
+    text-align: right;
+    letter-spacing: 0.04em;
+  }
+  tbody td {
+    padding: 11px 14px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: middle;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+  .badge {
+    display: inline-block;
+    font-size: 11px; font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 999px;
+  }
+  .b-mill { background: rgba(79,126,248,0.15); color: #7ea8ff; }
+  .b-drill { background: rgba(52,211,153,0.15); color: #34d399; }
+  .b-bore { background: rgba(251,191,36,0.15); color: #fbbf24; }
+  .b-finish { background: rgba(167,139,250,0.15); color: #a78bfa; }
+  .b-face { background: rgba(248,113,113,0.15); color: #f87171; }
+
+  /* NOTES */
+  .note-box {
+    background: rgba(251,191,36,0.07);
+    border: 1px solid rgba(251,191,36,0.25);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    font-size: 13px;
+    color: #d4a820;
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+  }
+
+  /* EXPORT BUTTONS */
+  .export-row {
+    display: flex; gap: 10px; flex-wrap: wrap;
+  }
+  .btn-export {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 18px;
+    border-radius: var(--radius-sm);
+    font-size: 13px; font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+    border: none;
+  }
+  .btn-export:active { transform: scale(0.97); }
+  .btn-csv {
+    background: rgba(52,211,153,0.15);
+    border: 1px solid rgba(52,211,153,0.3);
+    color: var(--green);
+  }
+  .btn-pdf-export {
+    background: rgba(79,126,248,0.15);
+    border: 1px solid rgba(79,126,248,0.3);
+    color: var(--accent);
+  }
+  .btn-reset {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    margin-right: auto;
+  }
+  .btn-export:hover { opacity: 0.8; }
+
+  /* ERROR */
+  .error-box {
+    background: rgba(248,113,113,0.08);
+    border: 1px solid rgba(248,113,113,0.25);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    font-size: 13px;
+    color: var(--red);
+    display: none;
+    margin-top: 1rem;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-icon">⚙</div>
+      <div class="logo-text">CNC Tool Analyzer</div>
+      <div class="logo-sub">ניתוח שרטוטים הנדסיים ורשימת כלים</div>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- UPLOAD + MATERIAL -->
+  <div class="upload-section">
+
+    <!-- DROP ZONE -->
+    <div class="card">
+      <div class="card-label">העלאת שרטוט</div>
+      <div class="drop-zone" id="dropZone">
+        <input type="file" id="fileInput" accept="image/*,.pdf" />
+        <img class="drop-preview" id="dropPreview" alt="preview" />
+        <div class="drop-icon" id="dropIcon">📐</div>
+        <div class="drop-main" id="dropMain">גרור שרטוט לכאן</div>
+        <div class="drop-sub" id="dropSub">PDF / JPEG / PNG</div>
+        <div class="drop-filename" id="dropFilename"></div>
+      </div>
+    </div>
+
+    <!-- MATERIAL + OPTIONS -->
+    <div class="card material-card">
+      <div class="card-label">פרטי עיבוד</div>
+
+      <div class="field-group">
+        <label>סוג חומר</label>
+        <select id="materialSelect">
+          <option value="">בחר חומר...</option>
+          <option value="aluminum">אלומיניום (Al 6061 / 7075)</option>
+          <option value="steel_mild">פלדה רכה (St37 / A36)</option>
+          <option value="steel_stainless">נירוסטה (304 / 316)</option>
+          <option value="steel_hardened">פלדה קשה (42CrMo4)</option>
+          <option value="titanium">טיטניום (Ti-6Al-4V)</option>
+          <option value="brass">פליז / נחושת</option>
+          <option value="plastic">פלסטיק (POM / Nylon)</option>
+          <option value="other">אחר</option>
+        </select>
+      </div>
+
+      <div class="field-group" id="otherMaterialGroup" style="display:none">
+        <label>פירוט חומר</label>
+        <input type="text" id="otherMaterial" placeholder="לדוגמה: Inconel 718" />
+      </div>
+
+      <div class="field-group">
+        <label>מכונה זמינה</label>
+        <select id="machineSelect">
+          <option value="3axis">מרכז עיבוד 3 צירים</option>
+          <option value="4axis">מרכז עיבוד 4 צירים</option>
+          <option value="5axis">מרכז עיבוד 5 צירים</option>
+          <option value="lathe">מחרטה CNC</option>
+          <option value="mill_lathe">מחרטה + כרסומת משולב</option>
+        </select>
+      </div>
+
+      <div class="field-group">
+        <label>הערות נוספות (אופציונלי)</label>
+        <textarea id="extraNotes" placeholder="לדוגמה: דיוק מיוחד על חורים, גימור Ra0.8..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn-analyze" id="btnAnalyze" onclick="analyze()">נתח שרטוט וייצר רשימת כלים</button>
+  <div class="error-box" id="errorBox"></div>
+
+  <!-- LOADING -->
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <div class="loading-text">מנתח את השרטוט...</div>
+    <div class="loading-steps">
+      <div class="step" id="s1"><div class="step-dot"></div>טוען תמונה וזיהוי גיאומטריה</div>
+      <div class="step" id="s2"><div class="step-dot"></div>קריאת מידות וקוטרים</div>
+      <div class="step" id="s3"><div class="step-dot"></div>זיהוי סוגי עיבוד נדרשים</div>
+      <div class="step" id="s4"><div class="step-dot"></div>התאמת כלים לחומר ומכונה</div>
+      <div class="step" id="s5"><div class="step-dot"></div>הכנת רשימת כלים לספק</div>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results">
+    <div class="results-header">
+      <div>
+        <div class="results-title" id="resultsTitle">ניתוח שרטוט</div>
+        <div class="results-meta" id="resultsMeta"></div>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">גיאומטריות זוהו</div>
+        <div class="stat-value" id="statGeom">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">סוגי עיבוד</div>
+        <div class="stat-value" id="statOps">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">כלים נדרשים</div>
+        <div class="stat-value" id="statTools">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">ציר עיבוד</div>
+        <div class="stat-value" id="statAxis">—</div>
+      </div>
+    </div>
+
+    <!-- GEOMETRIES -->
+    <div class="card-label" style="margin-bottom:8px">גיאומטריות שזוהו</div>
+    <div class="geom-tags" id="geomTags"></div>
+
+    <!-- TOOL TABLE -->
+    <div class="card-label" style="margin-bottom:8px">רשימת כלים — מוכן לשליחה לספק</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>כלי</th>
+            <th>מפרט</th>
+            <th>סוג עיבוד</th>
+            <th>כמות</th>
+            <th>הערות</th>
+          </tr>
+        </thead>
+        <tbody id="toolTableBody"></tbody>
+      </table>
+    </div>
+
+    <!-- NOTE -->
+    <div class="note-box" id="noteBox"></div>
+
+    <!-- EXPORT -->
+    <div class="export-row">
+      <button class="btn-export btn-reset" onclick="resetAll()">🔄 ניתוח חדש</button>
+      <button class="btn-export btn-csv" onclick="exportCSV()">📊 ייצא CSV לספק</button>
+      <button class="btn-export btn-pdf-export" onclick="exportPDF()">📄 ייצא PDF להדפסה</button>
+    </div>
+  </div>
+
+</main>
+
+<footer style="text-align:center; padding: 1.5rem; border-top: 1px solid var(--border); font-size: 13px; color: var(--text2);">
+  Developed by <a href="https://davidatia.com" target="_blank" style="color: var(--accent); text-decoration: none; font-weight: 600;">DAVID:ATIA</a>
+</footer>
+
+<script>
+let analysisData = null;
+let fileBase64 = null;
+let fileName = '';
+
+const fileInput = document.getElementById('fileInput');
+const dropZone = document.getElementById('dropZone');
+
+fileInput.addEventListener('change', e => {
+  if (e.target.files[0]) handleFile(e.target.files[0]);
+});
+
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('drag-over');
+  if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+});
+
+document.getElementById('materialSelect').addEventListener('change', function() {
+  document.getElementById('otherMaterialGroup').style.display = this.value === 'other' ? 'block' : 'none';
+});
+
+function handleFile(file) {
+  fileName = file.name;
+  const reader = new FileReader();
+  reader.onload = e => {
+    fileBase64 = e.target.result;
+    document.getElementById('dropIcon').style.display = 'none';
+    document.getElementById('dropMain').style.display = 'none';
+    document.getElementById('dropSub').style.display = 'none';
+    const preview = document.getElementById('dropPreview');
+    if (file.type.startsWith('image/')) {
+      preview.src = fileBase64;
+      preview.style.display = 'block';
+    }
+    const fn = document.getElementById('dropFilename');
+    fn.textContent = '✓ ' + file.name;
+    fn.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function getMaterialLabel() {
+  const sel = document.getElementById('materialSelect');
+  if (sel.value === 'other') return document.getElementById('otherMaterial').value || 'לא צוין';
+  return sel.options[sel.selectedIndex].text || 'לא צוין';
+}
+
+async function animate() {
+  const steps = ['s1','s2','s3','s4','s5'];
+  for (let i = 0; i < steps.length; i++) {
+    if (i > 0) document.getElementById(steps[i-1]).className = 'step done';
+    document.getElementById(steps[i]).className = 'step active';
+    await new Promise(r => setTimeout(r, 900));
+  }
+}
+
+async function analyze() {
+  const errorBox = document.getElementById('errorBox');
+  errorBox.style.display = 'none';
+
+  if (!fileBase64) {
+    errorBox.textContent = 'יש להעלות שרטוט לפני הניתוח.';
+    errorBox.style.display = 'block';
+    return;
+  }
+  const matVal = document.getElementById('materialSelect').value;
+  if (!matVal) {
+    errorBox.textContent = 'יש לבחור סוג חומר.';
+    errorBox.style.display = 'block';
+    return;
+  }
+
+  const material = getMaterialLabel();
+  const machine = document.getElementById('machineSelect').options[document.getElementById('machineSelect').selectedIndex].text;
+  const notes = document.getElementById('extraNotes').value;
+
+  document.getElementById('btnAnalyze').disabled = true;
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('results').style.display = 'none';
+
+  animate();
+
+  const isImage = fileBase64.startsWith('data:image');
+  const base64Data = fileBase64.split(',')[1];
+  const mimeMatch = fileBase64.match(/data:([^;]+);/);
+  const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+
+  const systemPrompt = `אתה מומחה CNC הנדסי. נתח שרטוטים הנדסיים והפק רשימת כלים מדויקת. 
+ענה אך ורק ב-JSON תקני ללא backticks או הסברים נוספים.
+הפורמט:
+{
+  "partName": "שם החלק",
+  "geometries": ["רשימת גיאומטריות שזוהו"],
+  "operationsCount": מספר,
+  "axisCount": "3-4",
+  "note": "הערה חשובה לגבי החומר/עיבוד",
+  "tools": [
+    {
+      "num": 1,
+      "name": "שם הכלי",
+      "spec": "מפרט מדויק",
+      "type": "mill|drill|bore|finish|face",
+      "typeLabel": "כרסום|קדיחה|סיבוב|גמר|פייסינג",
+      "qty": 1,
+      "notes": "הערה"
+    }
+  ]
+}`;
+
+  const userContent = [
+    {
+      type: "text",
+      text: `נתח את השרטוט ההנדסי הבא והפק רשימת כלים CNC מפורטת.
+חומר: ${material}
+מכונה: ${machine}
+${notes ? 'הערות: ' + notes : ''}
+
+זיהוי נדרש: גיאומטריות, מידות, קוטרים, רדיוסים, חורים, כיסים, משטחים.
+התאם כלים לחומר "${material}" (קשיות, ציפוי, מספר שיניים).
+החזר JSON בלבד.`
+    }
+  ];
+
+  if (isImage) {
+    userContent.push({
+      type: "image",
+      source: { type: "base64", media_type: mimeType, data: base64Data }
+    });
+  }
+
+  try {
+    const resp = await fetch("/api/analyze", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: [{ role: "user", content: userContent }]
+      })
+    });
+
+    const data = await resp.json();
+    const raw = data.content.map(c => c.text || '').join('');
+    const clean = raw.replace(/```json|```/g, '').trim();
+    analysisData = JSON.parse(clean);
+    analysisData.material = material;
+    analysisData.machine = machine;
+    analysisData.fileName = fileName;
+
+    await new Promise(r => setTimeout(r, 500));
+    document.getElementById('loading').style.display = 'none';
+    renderResults(analysisData);
+
+  } catch(err) {
+    document.getElementById('loading').style.display = 'none';
+    errorBox.textContent = 'שגיאה בניתוח: ' + err.message;
+    errorBox.style.display = 'block';
+    document.getElementById('btnAnalyze').disabled = false;
+  }
+}
+
+const badgeClass = { mill:'b-mill', drill:'b-drill', bore:'b-bore', finish:'b-finish', face:'b-face' };
+
+function renderResults(d) {
+  document.getElementById('resultsTitle').textContent = d.partName || 'ניתוח שרטוט';
+  document.getElementById('resultsMeta').textContent = `חומר: ${d.material} | מכונה: ${d.machine} | קובץ: ${d.fileName}`;
+  document.getElementById('statGeom').textContent = d.geometries?.length || '—';
+  document.getElementById('statOps').textContent = d.operationsCount || d.tools?.length || '—';
+  document.getElementById('statTools').textContent = d.tools?.length || '—';
+  document.getElementById('statAxis').textContent = d.axisCount || '—';
+
+  const geomTags = document.getElementById('geomTags');
+  geomTags.innerHTML = (d.geometries || []).map(g =>
+    `<span class="geom-tag">${g}</span>`
+  ).join('');
+
+  const tbody = document.getElementById('toolTableBody');
+  tbody.innerHTML = (d.tools || []).map(t => `
+    <tr>
+      <td style="color:var(--text2);font-size:12px">${t.num}</td>
+      <td style="font-weight:500">${t.name}</td>
+      <td style="font-family:monospace;font-size:12px;color:var(--text2)">${t.spec}</td>
+      <td><span class="badge ${badgeClass[t.type] || 'b-mill'}">${t.typeLabel}</span></td>
+      <td style="text-align:center">${t.qty}</td>
+      <td style="color:var(--text2);font-size:12px">${t.notes}</td>
+    </tr>
+  `).join('');
+
+  document.getElementById('noteBox').textContent = d.note || '';
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+}
+
+function exportCSV() {
+  if (!analysisData) return;
+  const now = new Date().toLocaleDateString('he-IL');
+  let csv = `\uFEFF"רשימת כלים - ${analysisData.partName}"\n`;
+  csv += `"חומר","${analysisData.material}"\n`;
+  csv += `"מכונה","${analysisData.machine}"\n`;
+  csv += `"תאריך","${now}"\n\n`;
+  csv += `"#","כלי","מפרט","סוג עיבוד","כמות","הערות"\n`;
+  (analysisData.tools || []).forEach(t => {
+    csv += `"${t.num}","${t.name}","${t.spec}","${t.typeLabel}","${t.qty}","${t.notes}"\n`;
+  });
+  if (analysisData.note) csv += `\n"הערה","${analysisData.note}"\n`;
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `tool-list-${analysisData.partName || 'part'}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+}
+
+function exportPDF() {
+  if (!analysisData) return;
+  const now = new Date().toLocaleDateString('he-IL');
+  const rows = (analysisData.tools || []).map(t => `
+    <tr>
+      <td>${t.num}</td>
+      <td><strong>${t.name}</strong></td>
+      <td>${t.spec}</td>
+      <td>${t.typeLabel}</td>
+      <td>${t.qty}</td>
+      <td>${t.notes}</td>
+    </tr>`).join('');
+
+  const html = `<!DOCTYPE html><html lang="he" dir="rtl"><head><meta charset="UTF-8">
+<title>רשימת כלים - ${analysisData.partName}</title>
+<style>
+  body{font-family:Arial,sans-serif;direction:rtl;padding:30px;color:#111}
+  h1{font-size:22px;margin-bottom:4px}
+  .meta{font-size:13px;color:#555;margin-bottom:24px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{background:#1a1d27;color:#fff;padding:10px 12px;text-align:right}
+  td{padding:9px 12px;border-bottom:1px solid #ddd}
+  tr:nth-child(even) td{background:#f8f8f8}
+  .note{margin-top:20px;padding:12px;background:#fffde7;border:1px solid #f9a825;border-radius:6px;font-size:13px}
+  .footer{margin-top:30px;font-size:11px;color:#999;border-top:1px solid #eee;padding-top:10px}
+</style></head><body>
+<h1>רשימת כלים — ${analysisData.partName}</h1>
+<div class="meta">חומר: ${analysisData.material} | מכונה: ${analysisData.machine} | תאריך: ${now} | קובץ: ${analysisData.fileName}</div>
+<table>
+  <thead><tr><th>#</th><th>כלי</th><th>מפרט</th><th>סוג עיבוד</th><th>כמות</th><th>הערות</th></tr></thead>
+  <tbody>${rows}</tbody>
+</table>
+${analysisData.note ? `<div class="note"><strong>הערה:</strong> ${analysisData.note}</div>` : ''}
+<div class="footer">הופק על ידי CNC Tool Analyzer • ${now}</div>
+</body></html>`;
+
+  const w = window.open('', '_blank');
+  w.document.write(html);
+  w.document.close();
+  w.print();
+}
+
+function resetAll() {
+  analysisData = null; fileBase64 = null; fileName = '';
+  document.getElementById('fileInput').value = '';
+  document.getElementById('dropPreview').style.display = 'none';
+  document.getElementById('dropIcon').style.display = '';
+  document.getElementById('dropMain').style.display = '';
+  document.getElementById('dropSub').style.display = '';
+  document.getElementById('dropFilename').style.display = 'none';
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('btnAnalyze').disabled = false;
+  document.getElementById('errorBox').style.display = 'none';
+  document.getElementById('materialSelect').value = '';
+  document.getElementById('extraNotes').value = '';
+  ['s1','s2','s3','s4','s5'].forEach(s => document.getElementById(s).className = 'step');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>
