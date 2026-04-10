@@ -763,14 +763,14 @@ function exportPDF() {
   .note{margin-top:20px;padding:12px;background:#fffde7;border:1px solid #f9a825;border-radius:6px;font-size:13px}
   .footer{margin-top:30px;font-size:11px;color:#999;border-top:1px solid #eee;padding-top:10px}
 </style></head><body>
-<h1>רשימת כלים — ${analysisData.partName}</h1>
-<div class="meta">חומר: ${analysisData.material} | מכונה: ${analysisData.machine} | תאריך: ${now} | קובץ: ${analysisData.fileName}</div>
+<h1>רשימת כלים</h1>
+<div class="meta">חומר: ${analysisData.material} | מכונה: ${analysisData.machine} | קובץ: ${analysisData.fileName}</div>
 <table>
   <thead><tr><th>#</th><th>כלי</th><th>מפרט</th><th>סוג עיבוד</th><th>כמות</th><th>הערות</th></tr></thead>
   <tbody>${rows}</tbody>
 </table>
 ${analysisData.note ? `<div class="note"><strong>הערה:</strong> ${analysisData.note}</div>` : ''}
-<div class="footer">הופק על ידי CNC Tool Analyzer • ${now}</div>
+<div class="footer">Developed by DAVID:ATIA</div>
 </body></html>`;
 
   const w = window.open('', '_blank');
