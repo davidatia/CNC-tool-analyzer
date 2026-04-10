@@ -191,11 +191,27 @@
   .btn-analyze:active { transform: scale(0.98); }
   .btn-analyze:disabled { opacity: 0.4; cursor: not-allowed; }
 
-  /* LOADING */
-  .loading {
+  /* LOADING MODAL */
+  .loading-overlay {
     display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+  }
+  .loading-overlay.show {
+    display: flex;
+  }
+  .loading {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
     text-align: center;
-    padding: 3rem;
+    padding: 2.5rem 3rem;
+    min-width: 340px;
+    max-width: 460px;
   }
   .spinner {
     width: 44px; height: 44px;
@@ -439,16 +455,18 @@
   <button class="btn-analyze" id="btnAnalyze" onclick="analyze()">נתח שרטוט וייצר רשימת כלים</button>
   <div class="error-box" id="errorBox"></div>
 
-  <!-- LOADING -->
-  <div class="loading" id="loading">
-    <div class="spinner"></div>
-    <div class="loading-text">מנתח את השרטוט...</div>
-    <div class="loading-steps">
-      <div class="step" id="s1"><div class="step-dot"></div>טוען תמונה וזיהוי גיאומטריה</div>
-      <div class="step" id="s2"><div class="step-dot"></div>קריאת מידות וקוטרים</div>
-      <div class="step" id="s3"><div class="step-dot"></div>זיהוי סוגי עיבוד נדרשים</div>
-      <div class="step" id="s4"><div class="step-dot"></div>התאמת כלים לחומר ומכונה</div>
-      <div class="step" id="s5"><div class="step-dot"></div>הכנת רשימת כלים לספק</div>
+  <!-- LOADING MODAL -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <div class="loading-text">מנתח את השרטוט...</div>
+      <div class="loading-steps">
+        <div class="step" id="s1"><div class="step-dot"></div>טוען תמונה וזיהוי גיאומטריה</div>
+        <div class="step" id="s2"><div class="step-dot"></div>קריאת מידות וקוטרים</div>
+        <div class="step" id="s3"><div class="step-dot"></div>זיהוי סוגי עיבוד נדרשים</div>
+        <div class="step" id="s4"><div class="step-dot"></div>התאמת כלים לחומר ומכונה</div>
+        <div class="step" id="s5"><div class="step-dot"></div>הכנת רשימת כלים לספק</div>
+      </div>
     </div>
   </div>
 
@@ -599,7 +617,7 @@ async function analyze() {
   const notes = document.getElementById('extraNotes').value;
 
   document.getElementById('btnAnalyze').disabled = true;
-  document.getElementById('loading').style.display = 'block';
+  document.getElementById('loadingOverlay').classList.add('show');
   document.getElementById('results').style.display = 'none';
 
   animate();
@@ -675,11 +693,11 @@ ${notes ? 'הערות: ' + notes : ''}
     analysisData.fileName = fileName;
 
     await new Promise(r => setTimeout(r, 500));
-    document.getElementById('loading').style.display = 'none';
+    document.getElementById('loadingOverlay').classList.remove('show');
     renderResults(analysisData);
 
   } catch(err) {
-    document.getElementById('loading').style.display = 'none';
+    document.getElementById('loadingOverlay').classList.remove('show');
     errorBox.textContent = 'שגיאה בניתוח: ' + err.message;
     errorBox.style.display = 'block';
     document.getElementById('btnAnalyze').disabled = false;
@@ -786,7 +804,7 @@ function resetAll() {
   document.getElementById('dropSub').style.display = '';
   document.getElementById('dropFilename').style.display = 'none';
   document.getElementById('results').style.display = 'none';
-  document.getElementById('loading').style.display = 'none';
+  document.getElementById('loadingOverlay').classList.remove('show');
   document.getElementById('btnAnalyze').disabled = false;
   document.getElementById('errorBox').style.display = 'none';
   document.getElementById('materialSelect').value = '';
