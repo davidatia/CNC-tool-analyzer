@@ -754,17 +754,15 @@ function exportPDF() {
 <title>רשימת כלים - ${analysisData.partName}</title>
 <style>
   body{font-family:Arial,sans-serif;direction:rtl;padding:30px;color:#111}
-  h1{font-size:22px;margin-bottom:4px}
-  .meta{font-size:13px;color:#555;margin-bottom:24px}
+  h1{font-size:22px;margin-bottom:24px;text-align:center}
   table{width:100%;border-collapse:collapse;font-size:13px}
   th{background:#1a1d27;color:#fff;padding:10px 12px;text-align:right}
   td{padding:9px 12px;border-bottom:1px solid #ddd}
   tr:nth-child(even) td{background:#f8f8f8}
   .note{margin-top:20px;padding:12px;background:#fffde7;border:1px solid #f9a825;border-radius:6px;font-size:13px}
-  .footer{margin-top:30px;font-size:11px;color:#999;border-top:1px solid #eee;padding-top:10px}
+  .footer{margin-top:30px;font-size:11px;color:#999;border-top:1px solid #eee;padding-top:10px;text-align:center}
 </style></head><body>
 <h1>רשימת כלים</h1>
-<div class="meta">חומר: ${analysisData.material} | מכונה: ${analysisData.machine} | קובץ: ${analysisData.fileName}</div>
 <table>
   <thead><tr><th>#</th><th>כלי</th><th>מפרט</th><th>סוג עיבוד</th><th>כמות</th><th>הערות</th></tr></thead>
   <tbody>${rows}</tbody>
